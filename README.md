@@ -17,7 +17,7 @@ chan = '#matrix:matrix.org'  # default chan
 
 ## Enjoy
 
-`./main.py`
+`./nim.py`
 
 ## Commands
 

@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-from datetime import datetime
 import asyncio
 
 import urwid
@@ -94,7 +93,6 @@ class Main(urwid.Frame):
                 active = '*' if account == self.account and i == self.active_room_idx else ' '
                 rooms.append(f' {active} {name}'[:ROOM_LIST_WIDTH - 1])
         self.rooms.set_text('\n'.join(rooms))
-
 
     def next(self):
         self.active_room_idx += 1
