@@ -18,3 +18,12 @@ chan = '#matrix:matrix.org'  # default chan
 ## Enjoy
 
 `./main.py`
+
+## Commands
+
+Commands begins with a single `CMD_PREFIX` symbol.
+
+- `n`: next room
+- `p`: previous room
+- `q`: quit
+- `s`: go to system room
