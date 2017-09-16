@@ -4,96 +4,117 @@ from datetime import datetime
 import asyncio
 
 import urwid
-from matrix_client.client import MatrixClient
 
 from settings import *
+from matrix import Matrix
+from system import System
 
 
 class Input(urwid.Edit):
-    def __init__(self, chat):
-        self.chat = chat
+    def __init__(self, main):
+        self.main = main
         super().__init__()
 
     def keypress(self, size, key):
         if key == 'enter':
-            self.chat.cmd(self.edit_text)
-            self.set_edit_text('')
+            if self.edit_text:
+                self.main.cmd(self.edit_text)
+                self.set_edit_text('')
         else:
             return super().keypress(size, key)
 
 
-class Chat(urwid.Pile):
+class Main(urwid.Frame):
     def __init__(self):
-        self.hist = urwid.Text("")
-        self.input = Input(self)
         self.users = {}
-        self.rooms = {}
-        self.room_ids = []
-        self.room = ''
-        super().__init__([urwid.Filler(self.hist, valign='top'),
-                          urwid.Filler(self.input, valign='bottom')])
+        self.active_account_idx = 0
+        self.active_room_idx = 0
+
+        self.header = urwid.Text('header')
+        self.rooms = urwid.Text('rooms')
+        self.text = urwid.Text('text')
+        self.input = Input(self)
+        self.body = urwid.Columns([(ROOM_LIST_WIDTH, urwid.Filler(self.rooms, valign='top')),
+                                   urwid.Filler(self.text, valign='top')])
+
+        self.accounts = [System(self)]
+        self.accounts.append(Matrix(self))
+        self.update_header()
+        self.update_rooms()
+        super().__init__(self.body, header=self.header, footer=self.input, focus_part='footer')
 
     def cmd(self, text):
-        if text.startswith('/'):
-            if text == '/quit':
+        if text.startswith(CMD_PREFIX):
+            text = text[1:]
+            if text.startswith(CMD_PREFIX):
+                self.account.send(text, self.room_id)
+            elif text.startswith('q'):
                 raise urwid.ExitMainLoop
-            if text == '/next':
-                self.room = self.room_ids[(self.room_ids.index(self.room) + 1) % len(self.room_ids)]
-                self.update()
-        else:
-            self.send(text)
-
-    def send(self, text):
-        now = datetime.now().strftime('%H:%M:%S ')
-        self.hist.set_text(f'{self.hist.text}\n{now} {text}')
-
-
-class MatrixChats(Chat):
-    def __init__(self, client, main_room):
-        super().__init__()
-        self.client = client
-        for room_id, room in self.client.get_rooms().items():
-            self.rooms[room_id] = {'room': room, 'events': [], 'unread': 0, 'name': room.name, 'topic': room.topic}
-            self.room_ids.append(room_id)
-            room.add_listener(self.listener)
-            if main_room in room.aliases:
-                self.room = room_id
-        self.client.start_listener_thread()
-        self.update(False)
-
-    def listener(self, room, event):
-        self.rooms[room.room_id]['events'].append(event)
-        if room.room_id == self.room:
-            self.update()
-        else:
-            self.rooms[room.room_id]['unread'] += 1
-
-    def update(self, draw=True):
-        text = [self.rooms[self.room]['name']]
-        for event in self.rooms[self.room]['events']:
-            body = event['content']['body']
-            sender_id = event['sender']
-            if sender_id in self.users:
-                sender = self.users[sender_id]
+            elif text.startswith('n'):
+                self.next()
+            elif text.startswith('s'):
+                self.active_room_idx = self.active_account_idx = 0
             else:
-                sender = self.client.api.get_display_name(sender_id)
-                self.users[sender_id] = sender
-            dt = datetime.fromtimestamp(event['origin_server_ts'] / 1000).strftime(DT_FORMAT)
+                self.system(f'unknown command: {text}')
+            self.update_text()
+            self.update_header()
+        else:
+            self.account.send(text, self.room_id)
+
+    def system(self, text, sender='system'):
+        self.accounts[0].send(text, 'main', 'system')
+
+    def update_header(self, header=None):
+        if header is None:
+            header = self.room_data['topic']
+        self.header.set_text(header + '\n')
+
+    def update_text(self, history=None, draw=True):
+        text = []
+        if history is None:
+            history = self.room_data['history']
+        for dt, sender, body in history:
+            dt = dt.strftime(DT_FORMAT)
+            sender = self.users[sender]
             text.append(f'{dt} <{sender}> {body}')
-        self.hist.set_text('\n'.join(text))
+        self.text.set_text('\n'.join(text))
         if draw:
             main_loop.draw_screen()
 
-    def send(self, text):
-        self.rooms[self.room]['room'].send_text(text)
+    def update_rooms(self):
+        rooms = []
+        for account in self.accounts:
+            fill = '=' * (ROOM_LIST_WIDTH - 4 - len(str(account)))
+            rooms.append(f'= {account} {fill}')
+            for i, room_id in enumerate(account.rooms):
+                name = account.room_data[room_id]['name']
+                active = '*' if account == self.account and i == self.active_room_idx else ' '
+                rooms.append(f' {active} {name}'[:ROOM_LIST_WIDTH - 1])
+        self.rooms.set_text('\n'.join(rooms))
+
+
+    def next(self):
+        self.active_room_idx += 1
+        if self.active_room_idx >= len(self.account.rooms):
+            self.active_account_idx = (self.active_account_idx + 1) % len(self.accounts)
+            self.active_room_idx = 0
+        self.update_rooms()
+
+    @property
+    def account(self):
+        return self.accounts[self.active_account_idx]
+
+    @property
+    def room_id(self):
+        return self.account.rooms[self.active_room_idx]
+
+    @property
+    def room_data(self):
+        return self.account.room_data[self.room_id]
 
 
 if __name__ == '__main__':
-    matrix_client = MatrixClient(address)
-    matrix_client.login_with_password(username=login, password=passwd)
-
     event_loop = urwid.AsyncioEventLoop(loop=asyncio.get_event_loop())
     screen = urwid.raw_display.Screen()
-    chat = MatrixChats(matrix_client, chan)
-    main_loop = urwid.MainLoop(chat, screen=screen, event_loop=event_loop)
+    main_loop = urwid.MainLoop(Main(), screen=screen, event_loop=event_loop)
     main_loop.run()

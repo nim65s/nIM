@@ -7,6 +7,7 @@ Matrix.org console client in python with Urwid
 ```python
 DT_FORMAT = '%H:%M:%S'
 ROOM_LIST_WIDTH = 30
+CMD_PREFIX = ':'
 
 address = 'https://matrix.org'
 login = 'nim65s'
