@@ -40,6 +40,7 @@ class Main(urwid.Frame):
         self.accounts.append(Matrix(self))
         self.update_header()
         self.update_rooms()
+        self.update_text(draw=False)
         super().__init__(self.body, header=self.header, footer=self.input, focus_part='footer')
 
     def cmd(self, text):

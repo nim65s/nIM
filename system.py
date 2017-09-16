@@ -19,5 +19,5 @@ class System(object):
     def send(self, text, room_id, sender='you'):
         history = self.room_data[room_id]['history']
         history.append((datetime.now(), sender, text))
-        if self.main.account == self:
+        if self.main.active_account_idx == 0:
             self.main.update_text(history, draw=False)

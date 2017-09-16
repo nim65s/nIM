@@ -28,6 +28,9 @@ class Matrix(object):
             for event in room.events:
                 if event['type'] == 'm.room.message':
                     self.room_data[room_id]['history'].append(self.event_to_history(event))
+            if chan in room.aliases:
+                self.main.active_room_idx = len(self.rooms) - 1
+                self.main.active_account_idx = 1
             room.add_listener(self.listener)
         self.client.start_listener_thread()
 
