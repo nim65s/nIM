@@ -11,12 +11,13 @@ class Matrix(object):
         self.login = login
 
         self.client = MatrixClient(address)
-        self.client.login_with_password(username=login, password=passwd)
+        self.client.login_with_password(login, passwd)
 
         self.rooms = []
         self.room_data = {}
 
         for room_id, room in self.client.get_rooms().items():
+            self.main.system(f'add matrix room {room_id}')
             self.rooms.append(room_id)
             self.room_data[room_id] = {
                 'history': [],
@@ -24,21 +25,27 @@ class Matrix(object):
                 'name': room.name or room_id,
                 'topic': room.topic or '',
             }
-            self.main.system(f'add matrix room {room_id}')
-
+            for event in room.events:
+                if event['type'] == 'm.room.message':
+                    self.room_data[room_id]['history'].append(self.event_to_history(event))
             room.add_listener(self.listener)
         self.client.start_listener_thread()
 
     def __str__(self):
         return f'Matrix {self.login}'
 
+    def event_to_history(self, event):
+        self.add_sender(event['sender'])
+        return datetime.fromtimestamp(event['origin_server_ts'] / 1000), event['sender'], event['content']['body']
+
+    def add_sender(self, sender):
+        if sender not in self.main.users:
+            self.main.users[sender] = self.client.api.get_display_name(sender)
+
     def listener(self, room, event):
         if event['type'] == 'm.room.message':
             history = self.room_data[room.room_id]['history']
-            dt = datetime.fromtimestamp(event['origin_server_ts'] / 1000)
-            history.append((dt, event['sender'], event['content']['body']))
-            if event['sender'] not in self.main.users:
-                self.main.users[event['sender']] = self.client.api.get_display_name(event['sender'])
+            history.append(self.event_to_history(event))
             if self.main.account == self and room.room_id == self.main.room_id:
                 self.main.update_text(history)
         else:

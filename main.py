@@ -54,6 +54,7 @@ class Main(urwid.Frame):
                 self.next()
             elif text.startswith('s'):
                 self.active_room_idx = self.active_account_idx = 0
+                self.update_rooms()
             else:
                 self.system(f'unknown command: {text}')
             self.update_text()
