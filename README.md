@@ -2,7 +2,12 @@
 
 Matrix.org console client in python with Urwid
 
-## Write a settings.py:
+## dependencies
+
+- `urwid`
+- `matrix-client`
+
+## Write a `settings.py` file:
 
 ```python
 DT_FORMAT = '%H:%M:%S'
