@@ -52,6 +52,8 @@ class Main(urwid.Frame):
                 raise urwid.ExitMainLoop
             elif text.startswith('n'):
                 self.next()
+            elif text.startswith('p'):
+                self.prev()
             elif text.startswith('s'):
                 self.active_room_idx = self.active_account_idx = 0
                 self.update_rooms()
@@ -99,6 +101,13 @@ class Main(urwid.Frame):
         if self.active_room_idx >= len(self.account.rooms):
             self.active_account_idx = (self.active_account_idx + 1) % len(self.accounts)
             self.active_room_idx = 0
+        self.update_rooms()
+
+    def prev(self):
+        self.active_room_idx -= 1
+        if self.active_room_idx < 0:
+            self.active_account_idx = (self.active_account_idx - 1) % len(self.accounts)
+            self.active_room_idx = len(self.account.rooms) - 1
         self.update_rooms()
 
     @property
