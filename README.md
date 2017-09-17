@@ -32,3 +32,19 @@ Commands begins with a single `CMD_PREFIX` symbol.
 - `p`: previous room
 - `q`: quit
 - `s`: go to system room
+
+## Contribute
+
+This clients lacks a few basic features, that are not hard to implement, like:
+
+- shortcuts for commands
+- better configuration file
+- colors
+- unread messages count / indicators
+- group/reorder chans
+- multi accounts
+- other protocols
+
+If someone opens an issue to ask for this kind of stuff, I can do it.
+
+About E2E encryption, I can accept PR :)
