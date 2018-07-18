@@ -10,8 +10,8 @@ class Matrix(object):
         self.main = main
         self.login = login
 
-        self.client = MatrixClient(address)
-        self.client.login_with_password(login, passwd)
+        self.client = MatrixClient(address, encryption=encryption)
+        self.client.login(login, passwd, device_id=device_id)
 
         self.rooms = []
         self.room_data = {}
@@ -55,4 +55,4 @@ class Matrix(object):
             self.main.system(str(event))
 
     def send(self, text, room_id):
-        self.client.api.send_message(room_id, text)
+        self.client.rooms[room_id].send_text(text)

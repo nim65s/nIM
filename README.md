@@ -7,6 +7,9 @@ Matrix.org console client in python with Urwid
 - `urwid`
 - `matrix-client`
 
+You can install them by running `pip install -r requirements.txt`.  
+In order to use experimental end-to-end encryption support, do `pip install -r requirements_e2e.txt --process-dependency-links`.
+
 ## Write a `settings.py` file:
 
 ```python
@@ -18,6 +21,8 @@ address = 'https://matrix.org'
 login = 'nim65s'
 passwd = '<your_password_goes_here>'
 chan = '#matrix:matrix.org'  # default chan
+device_id = None # specifying a device_id is important if you intend to use E2E
+encryption = False # True enables automatic E2E support
 ```
 
 ## Enjoy
