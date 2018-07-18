@@ -1,0 +1,2 @@
+urwid
+-e 'git+https://github.com/Zil0/matrix-python-sdk@e2e_beta_1#egg=matrix-python-sdk-e2e[e2e]'

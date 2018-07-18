@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
 
 import asyncio
+import logging
 
 import urwid
 
 from settings import *
 from matrix import Matrix
 from system import System
+
+logging.basicConfig(filename='nim.log', level=logging.INFO)
 
 
 class Input(urwid.Edit):
