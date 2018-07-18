@@ -51,5 +51,3 @@ This clients lacks a few basic features, that are not hard to implement, like:
 - other protocols
 
 If someone opens an issue to ask for this kind of stuff, I can do it.
-
-About E2E encryption, I can accept PR :)
