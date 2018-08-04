@@ -1,2 +1,0 @@
-urwid
-matrix_client
